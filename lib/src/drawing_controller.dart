@@ -35,7 +35,7 @@ class DrawConfig {
     this.fingerCount = 0,
     this.size,
     this.blendMode = BlendMode.srcOver,
-    this.color = Colors.red,
+    required this.color,
     this.colorFilter,
     this.filterQuality = FilterQuality.high,
     this.imageFilter,
@@ -132,13 +132,16 @@ class DrawConfig {
 
 /// 绘制控制器
 class DrawingController extends ChangeNotifier {
-  DrawingController({DrawConfig? config, PaintContent? content}) {
+  DrawingController(
+      {DrawConfig? config,
+      PaintContent? content,
+      Color paintColor = Colors.red}) {
     _history = <PaintContent>[];
     _currentIndex = 0;
     realPainter = RePaintNotifier();
     painter = RePaintNotifier();
     drawConfig = SafeValueNotifier<DrawConfig>(
-        config ?? DrawConfig.def(contentType: SimpleLine));
+        config ?? DrawConfig.def(contentType: SimpleLine, color: paintColor));
     setPaintContent(content ?? SimpleLine());
   }
 

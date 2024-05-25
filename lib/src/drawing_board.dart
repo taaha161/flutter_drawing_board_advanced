@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'drawing_controller.dart';
 
 import 'helper/ex_value_builder.dart';
@@ -123,8 +124,9 @@ class DrawingBoard extends StatefulWidget {
     ];
   }
 
-  static Widget buildDefaultActions(DrawingController controller) {
-    return _DrawingBoardState.buildDefaultActions(controller);
+  static Widget buildDefaultActions(
+      DrawingController controller, BuildContext context) {
+    return _DrawingBoardState.buildDefaultActions(controller, context);
   }
 
   static Widget buildDefaultTools(DrawingController controller,
@@ -173,7 +175,8 @@ class _DrawingBoardState extends State<DrawingBoard> {
       content = Column(
         children: <Widget>[
           Expanded(child: content),
-          if (widget.showDefaultActions) buildDefaultActions(_controller),
+          if (widget.showDefaultActions)
+            buildDefaultActions(_controller, context),
           if (widget.showDefaultTools)
             buildDefaultTools(_controller,
                 defaultToolsBuilder: widget.defaultToolsBuilder),
@@ -252,7 +255,8 @@ class _DrawingBoardState extends State<DrawingBoard> {
   }
 
   /// 构建默认操作栏
-  static Widget buildDefaultActions(DrawingController controller) {
+  static Widget buildDefaultActions(
+      DrawingController controller, BuildContext context) {
     return Material(
       color: Colors.white,
       child: SingleChildScrollView(
@@ -290,9 +294,43 @@ class _DrawingBoardState extends State<DrawingBoard> {
             IconButton(
                 icon: const Icon(CupertinoIcons.trash),
                 onPressed: () => controller.clear()),
+            IconButton(
+                onPressed: () {
+                  _showColorPicker(controller, context);
+                },
+                icon: const Icon(Icons.color_lens))
           ],
         ),
       ),
+    );
+  }
+
+  static void _showColorPicker(
+      DrawingController controller, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: Colors.red,
+              onColorChanged: (Color color) {
+                controller.setStyle(color: color);
+              },
+              pickerAreaHeightPercent: 0.8,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Got it'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
