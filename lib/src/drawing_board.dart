@@ -121,7 +121,42 @@ class DrawingBoard extends StatefulWidget {
           isActive: currType == Eraser,
           icon: CupertinoIcons.bandage,
           onTap: () => controller.setPaintContent(Eraser(color: Colors.white))),
+      DefToolItem(
+          isActive: false,
+          icon: CupertinoIcons.color_filter,
+          onTap: () {
+            controller.setPaintContent(Eraser(color: Colors.white));
+          }),
     ];
+  }
+
+  static void _showColorPicker(
+      DrawingController controller, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: Colors.red,
+              onColorChanged: (Color color) {
+                controller.setStyle(color: color);
+              },
+              pickerAreaHeightPercent: 0.8,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Got it'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   static Widget buildDefaultActions(

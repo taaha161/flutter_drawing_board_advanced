@@ -1,4 +1,4 @@
-name: flutter_drawing_board
+name: flutter_drawing_board_advanced
 description: A Flutter package of drawing board, provides basic drawing tools, canvas operations, and image data acquisition.
 version: 0.7.0+2
 homepage: https://github.com/fluttercandies/flutter_drawing_board
