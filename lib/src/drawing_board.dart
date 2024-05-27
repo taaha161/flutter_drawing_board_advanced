@@ -1,7 +1,9 @@
 import 'dart:math';
+import 'dart:developer' as logger;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'drawing_controller.dart';
 
@@ -23,32 +25,33 @@ typedef DefaultToolsBuilder = List<DefToolItem> Function(
 
 /// 画板
 class DrawingBoard extends StatefulWidget {
-  const DrawingBoard({
-    super.key,
-    required this.background,
-    this.controller,
-    this.showDefaultActions = false,
-    this.showDefaultTools = false,
-    this.onPointerDown,
-    this.onPointerMove,
-    this.onPointerUp,
-    this.clipBehavior = Clip.antiAlias,
-    this.defaultToolsBuilder,
-    this.boardClipBehavior = Clip.hardEdge,
-    this.panAxis = PanAxis.free,
-    this.boardBoundaryMargin,
-    this.boardConstrained = false,
-    this.maxScale = 20,
-    this.minScale = 0.2,
-    this.boardPanEnabled = true,
-    this.boardScaleEnabled = true,
-    this.boardScaleFactor = 200.0,
-    this.onInteractionEnd,
-    this.onInteractionStart,
-    this.onInteractionUpdate,
-    this.transformationController,
-    this.alignment = Alignment.topCenter,
-  });
+  const DrawingBoard(
+      {super.key,
+      required this.background,
+      this.controller,
+      this.showDefaultActions = false,
+      this.showDefaultTools = false,
+      this.onPointerDown,
+      this.onPointerMove,
+      this.onPointerUp,
+      this.clipBehavior = Clip.antiAlias,
+      this.defaultToolsBuilder,
+      this.boardClipBehavior = Clip.hardEdge,
+      this.panAxis = PanAxis.free,
+      this.boardBoundaryMargin,
+      this.boardConstrained = false,
+      this.maxScale = 20,
+      this.minScale = 0.2,
+      this.boardPanEnabled = true,
+      this.boardScaleEnabled = true,
+      this.boardScaleFactor = 200.0,
+      this.onInteractionEnd,
+      this.onInteractionStart,
+      this.onInteractionUpdate,
+      this.transformationController,
+      this.alignment = Alignment.topCenter,
+      required this.onTimerStart,
+      this.buttonText});
 
   /// 画板背景控件
   final Widget background;
@@ -93,70 +96,61 @@ class DrawingBoard extends StatefulWidget {
   final TransformationController? transformationController;
   final AlignmentGeometry alignment;
 
+  final VoidCallback? onTimerStart;
+  final String? buttonText;
+
   /// 默认工具项列表
-  static List<DefToolItem> defaultTools(
-      Type currType, DrawingController controller) {
+  static List<DefToolItem> defaultTools(VoidCallback? onTimerStart,
+      Type currType, DrawingController controller, String? buttonText) {
     return <DefToolItem>[
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == SimpleLine,
           icon: Icons.edit,
           onTap: () => controller.setPaintContent(SimpleLine())),
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == SmoothLine,
           icon: Icons.brush,
           onTap: () => controller.setPaintContent(SmoothLine())),
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == StraightLine,
           icon: Icons.show_chart,
           onTap: () => controller.setPaintContent(StraightLine())),
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == Rectangle,
           icon: CupertinoIcons.stop,
           onTap: () => controller.setPaintContent(Rectangle())),
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == Circle,
           icon: CupertinoIcons.circle,
           onTap: () => controller.setPaintContent(Circle())),
       DefToolItem(
+          startButton: false,
+          color: Colors.white,
+          activeColor: Colors.yellow,
           isActive: currType == Eraser,
           icon: CupertinoIcons.bandage,
           onTap: () => controller.setPaintContent(Eraser(color: Colors.white))),
       DefToolItem(
+          startButton: true,
           isActive: false,
-          icon: CupertinoIcons.color_filter,
-          onTap: () {
-            controller.setPaintContent(Eraser(color: Colors.white));
-          }),
+          onTap: onTimerStart,
+          buttonText: buttonText)
     ];
-  }
-
-  static void _showColorPicker(
-      DrawingController controller, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pick a color'),
-          content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: Colors.red,
-              onColorChanged: (Color color) {
-                controller.setStyle(color: color);
-              },
-              pickerAreaHeightPercent: 0.8,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Got it'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   static Widget buildDefaultActions(
@@ -206,19 +200,6 @@ class _DrawingBoardState extends State<DrawingBoard> {
       child: Align(alignment: widget.alignment, child: _buildBoard),
     );
 
-    if (widget.showDefaultActions || widget.showDefaultTools) {
-      content = Column(
-        children: <Widget>[
-          Expanded(child: content),
-          if (widget.showDefaultActions)
-            buildDefaultActions(_controller, context),
-          if (widget.showDefaultTools)
-            buildDefaultTools(_controller,
-                defaultToolsBuilder: widget.defaultToolsBuilder),
-        ],
-      );
-    }
-
     return Listener(
       onPointerDown: (PointerDownEvent pde) =>
           _controller.addFingerCount(pde.localPosition),
@@ -226,7 +207,33 @@ class _DrawingBoardState extends State<DrawingBoard> {
           _controller.reduceFingerCount(pue.localPosition),
       onPointerCancel: (PointerCancelEvent pce) =>
           _controller.reduceFingerCount(pce.localPosition),
-      child: content,
+      child: Column(
+        children: <Widget>[
+          Expanded(child: content), // Use Expanded to take available space
+          SizedBox(
+            height: 100,
+          ),
+          if (widget.showDefaultActions)
+            Column(
+              children: [
+                buildDefaultActions(_controller, context),
+                SizedBox(
+                  height: 10,
+                ),
+                buildDefaultTools(_controller,
+                    onTimerStart: widget.onTimerStart,
+                    buttonText: widget.buttonText,
+                    defaultToolsBuilder: widget.defaultToolsBuilder)
+              ],
+            )
+
+          // if (widget.showDefaultTools)
+          //   buildDefaultTools(_controller,
+          //       onTimerStart: widget.onTimerStart,
+          //       buttonText: widget.buttonText,
+          //       defaultToolsBuilder: widget.defaultToolsBuilder),
+        ],
+      ),
     );
   }
 
@@ -289,16 +296,45 @@ class _DrawingBoardState extends State<DrawingBoard> {
     );
   }
 
-  /// 构建默认操作栏
   static Widget buildDefaultActions(
       DrawingController controller, BuildContext context) {
-    return Material(
-      color: Colors.white,
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.0),
+      decoration: BoxDecoration(
+        color: Color(0XFF069FDE),
+        borderRadius: BorderRadius.circular(16.0),
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
         child: Row(
           children: <Widget>[
+            IconButton(
+              icon: const Icon(CupertinoIcons.arrow_turn_up_left),
+              color: Colors.white,
+              onPressed: () => controller.undo(),
+            ),
+            IconButton(
+              icon: const Icon(CupertinoIcons.arrow_turn_up_right),
+              color: Colors.white,
+              onPressed: () => controller.redo(),
+            ),
+            IconButton(
+              icon: const Icon(CupertinoIcons.rotate_right),
+              color: Colors.white,
+              onPressed: () => controller.turn(),
+            ),
+            IconButton(
+              icon: const Icon(CupertinoIcons.trash),
+              color: Colors.white,
+              onPressed: () => controller.clear(),
+            ),
+            IconButton(
+              icon: const Icon(Icons.color_lens),
+              color: Colors.white,
+              onPressed: () {
+                _showColorPicker(controller, context);
+              },
+            ),
             SizedBox(
               height: 24,
               width: 160,
@@ -311,29 +347,14 @@ class _DrawingBoardState extends State<DrawingBoard> {
                     value: dc.strokeWidth,
                     max: 50,
                     min: 1,
+                    activeColor: Colors.white,
+                    inactiveColor: Colors.grey,
                     onChanged: (double v) =>
                         controller.setStyle(strokeWidth: v),
                   );
                 },
               ),
             ),
-            IconButton(
-                icon: const Icon(CupertinoIcons.arrow_turn_up_left),
-                onPressed: () => controller.undo()),
-            IconButton(
-                icon: const Icon(CupertinoIcons.arrow_turn_up_right),
-                onPressed: () => controller.redo()),
-            IconButton(
-                icon: const Icon(CupertinoIcons.rotate_right),
-                onPressed: () => controller.turn()),
-            IconButton(
-                icon: const Icon(CupertinoIcons.trash),
-                onPressed: () => controller.clear()),
-            IconButton(
-                onPressed: () {
-                  _showColorPicker(controller, context);
-                },
-                icon: const Icon(Icons.color_lens))
           ],
         ),
       ),
@@ -346,7 +367,11 @@ class _DrawingBoardState extends State<DrawingBoard> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Pick a color'),
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Pick a color',
+            style: TextStyle(color: Colors.black),
+          ),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: Colors.red,
@@ -358,7 +383,10 @@ class _DrawingBoardState extends State<DrawingBoard> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Got it'),
+              child: const Text(
+                'Done',
+                style: TextStyle(color: Colors.black),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -369,14 +397,20 @@ class _DrawingBoardState extends State<DrawingBoard> {
     );
   }
 
-  /// 构建默认工具栏
+  /// Build default toolbar
   static Widget buildDefaultTools(
     DrawingController controller, {
+    VoidCallback? onTimerStart,
     DefaultToolsBuilder? defaultToolsBuilder,
+    String? buttonText,
     Axis axis = Axis.horizontal,
   }) {
-    return Material(
-      color: Colors.white,
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.0),
+      decoration: BoxDecoration(
+        color: Color(0XFF069FDE),
+        borderRadius: BorderRadius.circular(16.0),
+      ),
       child: SingleChildScrollView(
         scrollDirection: axis,
         padding: EdgeInsets.zero,
@@ -389,7 +423,8 @@ class _DrawingBoardState extends State<DrawingBoard> {
 
             final List<Widget> children =
                 (defaultToolsBuilder?.call(currType, controller) ??
-                        DrawingBoard.defaultTools(currType, controller))
+                        DrawingBoard.defaultTools(
+                            onTimerStart, currType, controller, buttonText))
                     .map((DefToolItem item) => _DefToolItemWidget(item: item))
                     .toList();
 
@@ -405,22 +440,25 @@ class _DrawingBoardState extends State<DrawingBoard> {
 
 /// 默认工具项配置文件
 class DefToolItem {
-  DefToolItem({
-    required this.icon,
-    required this.isActive,
-    this.onTap,
-    this.color,
-    this.activeColor = Colors.blue,
-    this.iconSize,
-  });
+  DefToolItem(
+      {required this.startButton,
+      this.icon,
+      required this.isActive,
+      this.onTap,
+      this.color,
+      this.activeColor = Colors.blue,
+      this.iconSize,
+      this.buttonText});
 
   final Function()? onTap;
-  final bool isActive;
+  bool isActive;
 
-  final IconData icon;
+  final bool startButton;
+  final IconData? icon;
   final double? iconSize;
   final Color? color;
   final Color activeColor;
+  final String? buttonText;
 }
 
 /// 默认工具项 Widget
@@ -433,13 +471,20 @@ class _DefToolItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: item.onTap,
-      icon: Icon(
-        item.icon,
-        color: item.isActive ? item.activeColor : item.color,
-        size: item.iconSize,
-      ),
-    );
+    return item.startButton
+        ? TextButton(
+            onPressed: item.onTap,
+            child: Text(
+              item.buttonText!,
+              style: TextStyle(color: Colors.white),
+            ))
+        : IconButton(
+            onPressed: item.onTap,
+            icon: Icon(
+              item.icon,
+              color: item.isActive ? item.activeColor : item.color,
+              size: item.iconSize,
+            ),
+          );
   }
 }

@@ -352,6 +352,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ..insert(
                         2,
                         DefToolItem(
+                          on
                           icon: Icons.image_rounded,
                           isActive: t == ImageContent,
                           onTap: () async {
