@@ -15,6 +15,7 @@ import 'paint_contents/rectangle.dart';
 import 'paint_contents/simple_line.dart';
 import 'paint_contents/smooth_line.dart';
 import 'paint_contents/straight_line.dart';
+import 'paint_contents/text.dart';
 import 'painter.dart';
 
 /// 默认工具栏构建器
@@ -114,37 +115,45 @@ class DrawingBoard extends StatefulWidget {
           startButton: false,
           color: Colors.white,
           activeColor: Colors.yellow,
-          isActive: currType == SmoothLine,
-          icon: Icons.brush,
-          onTap: () => controller.setPaintContent(SmoothLine())),
-      DefToolItem(
-          startButton: false,
-          color: Colors.white,
-          activeColor: Colors.yellow,
-          isActive: currType == StraightLine,
-          icon: Icons.show_chart,
-          onTap: () => controller.setPaintContent(StraightLine())),
-      DefToolItem(
-          startButton: false,
-          color: Colors.white,
-          activeColor: Colors.yellow,
-          isActive: currType == Rectangle,
-          icon: CupertinoIcons.stop,
-          onTap: () => controller.setPaintContent(Rectangle())),
-      DefToolItem(
-          startButton: false,
-          color: Colors.white,
-          activeColor: Colors.yellow,
-          isActive: currType == Circle,
-          icon: CupertinoIcons.circle,
-          onTap: () => controller.setPaintContent(Circle())),
-      DefToolItem(
-          startButton: false,
-          color: Colors.white,
-          activeColor: Colors.yellow,
-          isActive: currType == Eraser,
-          icon: CupertinoIcons.bandage,
-          onTap: () => controller.setPaintContent(Eraser(color: Colors.white))),
+          isActive: currType == TextPainterContent,
+          icon: Icons.text_fields,
+          onTap: () => controller.setPaintContent(TextPainterContent())),
+
+      // DefToolItem(
+      //     startButton: false,
+      //     color: Colors.white,
+      //     activeColor: Colors.yellow,
+      //     isActive: currType == SmoothLine,
+      //     icon: Icons.brush,
+      //     onTap: () => controller.setPaintContent(SmoothLine())),
+      // DefToolItem(
+      //     startButton: false,
+      //     color: Colors.white,
+      //     activeColor: Colors.yellow,
+      //     isActive: currType == StraightLine,
+      //     icon: Icons.show_chart,
+      //     onTap: () => controller.setPaintContent(StraightLine())),
+      // DefToolItem(
+      //     startButton: false,
+      //     color: Colors.white,
+      //     activeColor: Colors.yellow,
+      //     isActive: currType == Rectangle,
+      //     icon: CupertinoIcons.stop,
+      //     onTap: () => controller.setPaintContent(Rectangle())),
+      // DefToolItem(
+      //     startButton: false,
+      //     color: Colors.white,
+      //     activeColor: Colors.yellow,
+      //     isActive: currType == Circle,
+      //     icon: CupertinoIcons.circle,
+      //     onTap: () => controller.setPaintContent(Circle())),
+      // DefToolItem(
+      //     startButton: false,
+      //     color: Colors.white,
+      //     activeColor: Colors.yellow,
+      //     isActive: currType == Eraser,
+      //     icon: CupertinoIcons.bandage,
+      //     onTap: () => controller.setPaintContent(Eraser(color: Colors.white))),
       DefToolItem(
           startButton: true,
           isActive: false,
@@ -158,9 +167,10 @@ class DrawingBoard extends StatefulWidget {
     return _DrawingBoardState.buildDefaultActions(controller, context);
   }
 
-  static Widget buildDefaultTools(DrawingController controller,
+  static Widget buildDefaultTools(
+      BuildContext context, DrawingController controller,
       {DefaultToolsBuilder? defaultToolsBuilder, Axis axis = Axis.horizontal}) {
-    return _DrawingBoardState.buildDefaultTools(controller,
+    return _DrawingBoardState.buildDefaultTools(context, controller,
         defaultToolsBuilder: defaultToolsBuilder, axis: axis);
   }
 
@@ -216,14 +226,28 @@ class _DrawingBoardState extends State<DrawingBoard> {
           if (widget.showDefaultActions)
             Column(
               children: [
-                buildDefaultActions(_controller, context),
+                // buildDefaultActions(_controller, context),
+                // SizedBox(
+                //   height: 10,
+                // ),
+                buildDefaultTools(context, _controller,
+                    onTimerStart: widget.onTimerStart,
+                    buttonText: widget.buttonText,
+                    defaultToolsBuilder: widget.defaultToolsBuilder),
                 SizedBox(
                   height: 10,
                 ),
-                buildDefaultTools(_controller,
-                    onTimerStart: widget.onTimerStart,
-                    buttonText: widget.buttonText,
-                    defaultToolsBuilder: widget.defaultToolsBuilder)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  decoration: BoxDecoration(
+                    color: Color(0XFF069FDE),
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  child: buildTimeButton(context, _controller,
+                      onTimerStart: widget.onTimerStart,
+                      buttonText: widget.buttonText,
+                      defaultToolsBuilder: widget.defaultToolsBuilder),
+                )
               ],
             )
 
@@ -335,26 +359,27 @@ class _DrawingBoardState extends State<DrawingBoard> {
                 _showColorPicker(controller, context);
               },
             ),
-            SizedBox(
-              height: 24,
-              width: 160,
-              child: ExValueBuilder<DrawConfig>(
-                valueListenable: controller.drawConfig,
-                shouldRebuild: (DrawConfig p, DrawConfig n) =>
-                    p.strokeWidth != n.strokeWidth,
-                builder: (_, DrawConfig dc, ___) {
-                  return Slider(
-                    value: dc.strokeWidth,
-                    max: 50,
-                    min: 1,
-                    activeColor: Colors.white,
-                    inactiveColor: Colors.grey,
-                    onChanged: (double v) =>
-                        controller.setStyle(strokeWidth: v),
-                  );
-                },
-              ),
-            ),
+
+            // SizedBox(
+            //   height: 24,
+            //   width: 160,
+            //   child: ExValueBuilder<DrawConfig>(
+            //     valueListenable: controller.drawConfig,
+            //     shouldRebuild: (DrawConfig p, DrawConfig n) =>
+            //         p.strokeWidth != n.strokeWidth,
+            //     builder: (_, DrawConfig dc, ___) {
+            //       return Slider(
+            //         value: dc.strokeWidth,
+            //         max: 50,
+            //         min: 1,
+            //         activeColor: Colors.white,
+            //         inactiveColor: Colors.grey,
+            //         onChanged: (double v) =>
+            //             controller.setStyle(strokeWidth: v),
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -373,12 +398,45 @@ class _DrawingBoardState extends State<DrawingBoard> {
             style: TextStyle(color: Colors.black),
           ),
           content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: Colors.red,
-              onColorChanged: (Color color) {
-                controller.setStyle(color: color);
-              },
-              pickerAreaHeightPercent: 0.8,
+            child: Column(
+              children: [
+                ColorPicker(
+                  pickerColor: Colors.red,
+                  onColorChanged: (Color color) {
+                    controller.setStyle(color: color);
+                  },
+                  pickerAreaHeightPercent: 0.8,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Opacity",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    SizedBox(
+                      height: 24,
+                      width: 160,
+                      child: ExValueBuilder<DrawConfig>(
+                        valueListenable: controller.drawConfig,
+                        shouldRebuild: (DrawConfig p, DrawConfig n) =>
+                            p.strokeWidth != n.strokeWidth,
+                        builder: (_, DrawConfig dc, ___) {
+                          return Slider(
+                            value: dc.strokeWidth,
+                            max: 50,
+                            min: 1,
+                            activeColor: Color(0xFF069FDE),
+                            inactiveColor: Colors.grey,
+                            onChanged: (double v) =>
+                                controller.setStyle(strokeWidth: v),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           actions: <Widget>[
@@ -397,8 +455,27 @@ class _DrawingBoardState extends State<DrawingBoard> {
     );
   }
 
+  static Widget buildTimeButton(
+    BuildContext context,
+    DrawingController controller, {
+    VoidCallback? onTimerStart,
+    DefaultToolsBuilder? defaultToolsBuilder,
+    String? buttonText,
+    Axis axis = Axis.horizontal,
+  }) {
+    final Type currType = SimpleLine;
+
+    Widget button = _DefToolItemWidget(
+        item: DrawingBoard.defaultTools(
+                onTimerStart, currType, controller, buttonText)
+            .last);
+
+    return button;
+  }
+
   /// Build default toolbar
   static Widget buildDefaultTools(
+    BuildContext context,
     DrawingController controller, {
     VoidCallback? onTimerStart,
     DefaultToolsBuilder? defaultToolsBuilder,
@@ -421,15 +498,50 @@ class _DrawingBoardState extends State<DrawingBoard> {
           builder: (_, DrawConfig dc, ___) {
             final Type currType = dc.contentType;
 
-            final List<Widget> children =
+            List<Widget> children =
                 (defaultToolsBuilder?.call(currType, controller) ??
                         DrawingBoard.defaultTools(
                             onTimerStart, currType, controller, buttonText))
                     .map((DefToolItem item) => _DefToolItemWidget(item: item))
                     .toList();
 
+            children.removeLast();
+
+            final List<Widget> actionTools = <Widget>[
+              IconButton(
+                icon: const Icon(Icons.color_lens),
+                color: Colors.white,
+                onPressed: () {
+                  _showColorPicker(controller, context);
+                },
+              ),
+              IconButton(
+                icon: const Icon(CupertinoIcons.trash),
+                color: Colors.white,
+                onPressed: () => controller.clear(),
+              ),
+            ];
+
             return axis == Axis.horizontal
-                ? Row(children: children)
+                ? Row(children: [
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.arrow_turn_up_left),
+                      color: Colors.white,
+                      onPressed: () => controller.undo(),
+                    ),
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.arrow_turn_up_right),
+                      color: Colors.white,
+                      onPressed: () => controller.redo(),
+                    ),
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.rotate_right),
+                      color: Colors.white,
+                      onPressed: () => controller.turn(),
+                    ),
+                    ...children,
+                    ...actionTools
+                  ])
                 : Column(children: children);
           },
         ),

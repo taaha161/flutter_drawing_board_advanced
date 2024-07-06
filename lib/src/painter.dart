@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_drawing_board_advanced/src/paint_contents/text.dart';
 
 import 'drawing_controller.dart';
 import 'helper/ex_value_builder.dart';
@@ -91,6 +93,80 @@ class Painter extends StatelessWidget {
 
   void _onPanEnd(DragEndDetails ded) {}
 
+  Future<String?> _showTextInputDialog(
+      BuildContext context, Offset tapPosition) async {
+    TextEditingController _textEditingController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      barrierColor: Colors.transparent, // Makes the background transparent
+      builder: (BuildContext context) {
+        return Align(
+          alignment: Alignment(
+              (tapPosition.dx - MediaQuery.of(context).size.width / 2) /
+                  (MediaQuery.of(context).size.width / 2),
+              (tapPosition.dy - MediaQuery.of(context).size.height / 2) /
+                  (MediaQuery.of(context).size.height / 2)),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 300,
+              height: 150,
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.transparent, // Semi-transparent background
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    style: TextStyle(color: Colors.white),
+                    controller: _textEditingController,
+                    decoration: const InputDecoration(
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        hintText: "Type your text here",
+                        hintStyle: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      TextButton(
+                        child: const Text(
+                          'CANCEL',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        child: const Text(
+                          'OK',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context)
+                              .pop(_textEditingController.text);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -108,6 +184,25 @@ class Painter extends StatelessWidget {
             onPanDown: config.fingerCount <= 1 ? _onPanDown : null,
             onPanUpdate: config.fingerCount <= 1 ? _onPanUpdate : null,
             onPanEnd: config.fingerCount <= 1 ? _onPanEnd : null,
+            onTapDown: (details) async {
+              if (drawingController.currentContent is TextPainterContent) {
+                final textPainterContent =
+                    drawingController.currentContent as TextPainterContent;
+                log(drawingController.currentContent.toString());
+                final String? enteredText =
+                    await _showTextInputDialog(context, details.globalPosition);
+                if (enteredText != null && enteredText.isNotEmpty) {
+                  if (!drawingController.couldDraw) {
+                    log("I cannot draw");
+                    return;
+                  }
+
+                  textPainterContent.startDraw(details.localPosition);
+                  textPainterContent.text = enteredText;
+                  drawingController.addContent(textPainterContent);
+                }
+              }
+            },
             child: child,
           );
         },
