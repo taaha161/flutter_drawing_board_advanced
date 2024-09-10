@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/painting.dart';
 import '../draw_path/draw_path.dart';
 import '../paint_extension/ex_paint.dart';
@@ -66,7 +68,18 @@ class TextPainterContent extends PaintContent {
 
 // Helper functions to convert between JSON and Offset/Paint
 Offset jsonToOffset(Map<String, dynamic> json) {
-  return Offset(json['dx'] as double, json['dy'] as double);
+  try {
+    final double dx = (json['dx'] is int)
+        ? (json['dx'] as int).toDouble()
+        : json['dx'] as double;
+    final double dy = (json['dy'] is int)
+        ? (json['dy'] as int).toDouble()
+        : json['dy'] as double;
+    return Offset(dx, dy);
+  } catch (e) {
+    log(e.toString());
+    return Offset(0.0, 0.0); // Return a default value in case of an exception
+  }
 }
 
 Paint jsonToPaint(Map<String, dynamic> json) {
